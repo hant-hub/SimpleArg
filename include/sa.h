@@ -11,7 +11,8 @@
 #define OPTS
 #endif
 
-typedef char* string;
+#define string char*
+#define bool int
 
 typedef struct SAvals {
 #define X(name, type) type name;
@@ -27,7 +28,7 @@ typedef struct SA {
     SAvals vals;
 } SA;
 
-static int optcmp(char* a1, char* a2, int l1, int l2) {
+static int sa_optcmp(char* a1, char* a2, int l1, int l2) {
     for (int i = 0; i < l1; i++) {
         if (a1[0] != a2[0]) return 0;
         a1++;
@@ -36,7 +37,7 @@ static int optcmp(char* a1, char* a2, int l1, int l2) {
     return l1 == l2;
 }
 
-static int parseint(SA* s, char* arg) {
+static int sa_parseint(SA* s, char* arg) {
     int val = 0;
     while (*arg) {
         char c = *arg;
@@ -55,7 +56,11 @@ static int parseint(SA* s, char* arg) {
     return val;
 }
 
-static float parsefloat(SA* s, char* arg) {
+static bool sa_parsebool(SA* s, char* arg) {
+    return 1;
+}
+
+static float sa_parsefloat(SA* s, char* arg) {
     int val = 0;
     while (*arg && *arg != '.') {
         char c = *arg;
@@ -91,7 +96,7 @@ static float parsefloat(SA* s, char* arg) {
     return val + frac;
 }
 
-static string parsestring(SA* s, char* arg) {
+static string sa_parsestring(SA* s, char* arg) {
     return arg;
 }
 
@@ -99,16 +104,16 @@ static string parsestring(SA* s, char* arg) {
 static SA Parse(int argc, char** argv) {
     SA args = {};
 
-    int i = 0;
+    int idx = 0;
     //force all args first
     //Check if we have args, if not
     //fail
     #define X(name, type)  \
-        if (i >= argc) { \
+        if (idx >= argc) { \
             args.err = 1; \
             return args; \
         } \
-        args.vals.name = parse##type (&args, argv[i++]);
+        args.vals.name = sa_parse##type (&args, argv[idx++]);
 
     ARGS
     #undef X
@@ -116,23 +121,29 @@ static SA Parse(int argc, char** argv) {
     //all options must happen after args
 
     #define X(name, type) \
-        if (optcmp(arg, #name, len, sizeof(#name) - 1)) { \
+        if (sa_optcmp(arg, #name, len, sizeof(#name) - 1)) { \
             args.vals.name.set = 1; \
-            args.vals.name.val = parse##type (&args, val); \
+            args.vals.name.val = sa_parse##type (&args, val); \
         }
           
-    for (; i < argc; i++) {
+    for (int i = idx; i < argc; i++) {
         char* arg = argv[i];
         if (*arg != '-') continue; 
         arg++;
         if (*arg == '-') return args; //TODO(ELI): Decide how to handle
         
         char* val = arg;
+        int len = 0;
         while (*val && *val != '=') val++;
-        if (!val) val = argv[++i];
-        else val++;
-        
-        int len = val - arg - 1;
+        if (!val[0]) { 
+            if (i + 1 < argc) {
+                val = argv[++i];
+            }
+            while (arg[len]) len++;
+        } else {
+            val++;
+            len = val - arg - 1;
+        }
 
         OPTS
     }

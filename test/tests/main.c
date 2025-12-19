@@ -8,7 +8,8 @@
    X(c, string)
 
 #define OPTS \
-    X(out, int)
+    X(out, int) \
+    X(t, bool)
 
 #include <sa.h>
 
@@ -38,5 +39,6 @@ int main(int argc, char* argv[]) {
     debuglog("c: %n", results.c);
 
     debuglog("out: %d %d", results.out.set, results.out.val);
+    debuglog("t: %d %d", results.t.set, results.t.val);
     return 0;
 }
