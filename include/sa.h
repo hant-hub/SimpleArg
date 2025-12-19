@@ -1,8 +1,6 @@
 #ifndef SA_H
 #define SA_H
 
-#include "cutils.h"
-#include <stdlib.h>
 #ifndef ARGS
 #define ARGS
 #endif
@@ -85,8 +83,10 @@ static float sa_parsefloat(SA* s, char* arg) {
         char c = *arg;
 
         mult *= 0.1;
-        if (c < '0' || c > '9') 
-            exit(EXIT_FAILURE); 
+        if (c < '0' || c > '9') {
+            s->err = 1;
+            return 0;
+        }
         c -= '0';
         frac += c * mult;
 
@@ -104,7 +104,7 @@ static string sa_parsestring(SA* s, char* arg) {
 static SA Parse(int argc, char** argv) {
     SA args = {};
 
-    int idx = 0;
+    int idx = 1; //skip prog name
     //force all args first
     //Check if we have args, if not
     //fail
