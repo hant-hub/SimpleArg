@@ -153,5 +153,8 @@ static SA Parse(int argc, char** argv) {
     return args;
 }
 
+#undef string
+#undef bool
 #undef ARGS
+#undef OPTS
 #endif
